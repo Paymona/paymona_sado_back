@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import redirect, render
 from ..models import User
 
@@ -21,5 +22,6 @@ def LoginController(request):
         return render(request, 'login.html', {"error" : "Wrong Email or Password"})
     
     request.session['user_id'] = user_query.id
+    request.session['timestamp_login'] = datetime.now()
 
     return redirect('/')

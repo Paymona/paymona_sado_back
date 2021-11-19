@@ -1,7 +1,9 @@
+from datetime import date, datetime
 from django.shortcuts import redirect
 from authorization.models import User
-from home.models import Record
+from home.models import Record, Assess
 from django.shortcuts import render
+from mutagen.mp3 import MP3
 
 def ProfileController(request):
     if 'user_id' not in request.session:
@@ -13,7 +15,30 @@ def ProfileController(request):
         request.session.pop('user_id')
         return redirect('/auth/login')
 
-    record_query = Record.objects.get(user_query.id)
+    
+
+    record_query = Record.objects.filter(
+        author = user_query.id, 
+        date__range=(request.session['timestamp_login'], datetime.now()
+    ))
+
+    temp_durations = 0
+    for i in record_query:
+        temp_durations += MP3(i._file).info.length
+
+    temp_durations = round(temp_durations)
+
+
+    assess_query = Assess.objects.filter(
+        who = user_query.id, 
+        date__range=(request.session['timestamp_login'], datetime.now()
+    ))
+
+    ass_duration = 0
+    for i in assess_query:
+        ass_duration += MP3(i._file).info.length
+    
+    ass_duration = round(ass_duration)
 
     data = {
         'name' : user_query.username,
@@ -21,7 +46,10 @@ def ProfileController(request):
         'age' : user_query.age,
         'gender' : user_query.gender,
         'city' : user_query.city,
-        'dialect' : user_query.dialect
+        'dialect' : user_query.dialect,
+        'recorded' : temp_durations,
+        'assessed' : ass_duration
     }
     
 
+    return render(request, 'huyznaet.html', {'data' : data})
